@@ -8,8 +8,8 @@ folium = "==0.19.5"
 matplotlib = "==3.8.3"
 pandas = "==2.2.3"
 seaborn = "==0.13.2"
-streamlit = "*"
-streamlit-folium = "*"
+streamlit = "==1.35"
+streamlit-folium = "==0.24.0"
 
 [dev-packages]
 
