@@ -11,3 +11,8 @@ pip install -r requirements.txt
 ```
 streamlit run dashboard/dashboard.py
 ```
+
+## Link streamlit 
+```
+https://submission-kornel.streamlit.app/
+```
