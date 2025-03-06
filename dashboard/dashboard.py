@@ -28,54 +28,41 @@ with tab1:
         columns={"order_id": "quantity"}
     )
 
-    col1, col2, col3, col4 = st.columns(4)
-
+    col1, col2 = st.columns(2)
     with col1:
-        st.metric(
-            f"{sum_order_payments_df.iloc[0]['payment_type']}",
-            value=sum_order_payments_df.iloc[0]["quantity"],
+        sort_by = st.selectbox(
+            "Urutkan berdasarkan",
+            ["Jumlah Transaksi", "Nama"],
+            key="payment_sort",
         )
     with col2:
-        st.metric(
-            f"{sum_order_payments_df.iloc[1]['payment_type']}",
-            value=sum_order_payments_df.iloc[1]["quantity"],
-        )
-    with col3:
-        st.metric(
-            f"{sum_order_payments_df.iloc[2]['payment_type']}",
-            value=sum_order_payments_df.iloc[2]["quantity"],
-        )
-    with col4:
-        st.metric(
-            f"{sum_order_payments_df.iloc[3]['payment_type']}",
-            value=sum_order_payments_df.iloc[3]["quantity"],
+        sort_order = st.radio(
+            "Urutan",
+            ["Dari terkecil", "Dari terbesar"],
+            horizontal=True,
+            key="payment_order",
         )
 
-    fig, ax = plt.subplots(1, 2, figsize=(16, 6))
+    if sort_by == "Jumlah Transaksi":
+        sort_column = "quantity"
+    else:
+        sort_column = "payment_type"
+
+    ascending = True if sort_order == "Dari terkecil" else False
+    sorted_df = sum_order_payments_df.sort_values(by=sort_column, ascending=ascending)
+
+    fig, ax = plt.subplots(figsize=(16, 6))
 
     sns.barplot(
         x="payment_type",
         y="quantity",
-        data=sum_order_payments_df.head(5),
-        ax=ax[0],
+        data=sorted_df.head(5),
         palette="Blues_d",
         hue="payment_type",
     )
-    ax[0].set_title("Metode Pembayaran Paling Sering Digunakan")
-    ax[0].set_ylabel("Jumlah Transaksi")
-    ax[0].set_xlabel("Metode Pembayaran")
-
-    sns.barplot(
-        x="payment_type",
-        y="quantity",
-        data=sum_order_payments_df.sort_values(by="quantity", ascending=True),
-        ax=ax[1],
-        palette="Reds_d",
-        hue="payment_type",
-    )
-    ax[1].set_title("Metode Pembayaran Paling Jarang Digunakan")
-    ax[1].set_ylabel("Jumlah Transaksi")
-    ax[1].set_xlabel("Metode Pembayaran")
+    ax.set_title("Jumlah Metode Pembayaran yang Digunakan")
+    ax.set_ylabel("Jumlah Transaksi")
+    ax.set_xlabel("Metode Pembayaran")
 
     st.pyplot(fig)
 
@@ -95,35 +82,43 @@ with tab2:
     )
     sum_orders_df = sum_orders_df.rename(columns={"order_id": "quantity"})
 
-    fig, ax = plt.subplots(1, 2, figsize=(16, 6))
+    col1, col2 = st.columns(2)
+    with col1:
+        sort_by_product = st.selectbox(
+            "Urutkan berdasarkan",
+            ["Jumlah Terjual", "Nama Kategori Produk"],
+            key="product_sort",
+        )
+    with col2:
+        sort_order_product = st.radio(
+            "Urutan",
+            ["Dari terkecil", "Dari terbesar"],
+            horizontal=True,
+            key="product_order",
+        )
+
+    if sort_by_product == "Jumlah Terjual":
+        sort_column_product = "quantity"
+    else:
+        sort_column_product = "product_category_name"
+
+    ascending_product = True if sort_order_product == "Dari terkecil" else False
+    sorted_product_df = sum_orders_df.sort_values(
+        by=sort_column_product, ascending=ascending_product
+    )
+
+    fig, ax = plt.subplots(figsize=(16, 6))
 
     sns.barplot(
         x="quantity",
         y="product_category_name",
-        data=sum_orders_df.head(10),
-        ax=ax[0],
+        data=sorted_product_df.head(10),
         palette="Greens_d",
         hue="product_category_name",
     )
-    ax[0].set_title("Kategori produk yang paling banyak Dibeli")
-    ax[0].set_xlabel("Jumlah Terjual")
-    ax[0].set_ylabel("Kategori Produk")
-
-    sns.barplot(
-        x="quantity",
-        y="product_category_name",
-        data=sum_orders_df.sort_values(by="quantity", ascending=True).head(10),
-        ax=ax[1],
-        palette="Oranges_d",
-        hue="product_category_name",
-    )
-    ax[1].invert_xaxis()
-    ax[1].set_title("Kategori produk yang paling sedikit Dibeli")
-    ax[1].set_xlabel("Jumlah Terjual")
-    ax[1].yaxis.set_label_position("right")
-    ax[1].yaxis.tick_right()
-    ax[1].tick_params(axis="y", labelsize=15)
-    ax[1].set_ylabel("")
+    ax.set_title("Kategori Produk Berdasarkan Jumlah Terjual")
+    ax.set_xlabel("Jumlah Terjual")
+    ax.set_ylabel("Kategori Produk")
 
     st.pyplot(fig)
 
