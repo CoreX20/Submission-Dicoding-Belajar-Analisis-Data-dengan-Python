@@ -130,36 +130,54 @@ with tab2:
 with tab3:
     st.header("Distribusi Geografis Transaksi")
 
-    transaction_counts = (
-        all_df.groupby("geolocation_zip_code_prefix")
-        .agg(
-            total_transactions=("customer_id", "count"),
-            latitude=("geolocation_lat", "first"),
-            longitude=("geolocation_lng", "first"),
-            city=("geolocation_city", "first"),
-            state=("geolocation_state", "first"),
-        )
-        .reset_index()
-    )
-
-    m = folium.Map(location=[-23.5505, -46.6333], zoom_start=4)
-
-    heat_data = [
-        [row["latitude"], row["longitude"], row["total_transactions"]]
-        for _, row in transaction_counts.iterrows()
+    required_columns = [
+        "geolocation_lat",
+        "geolocation_lng",
+        "geolocation_zip_code_prefix",
     ]
-    HeatMap(heat_data, radius=15, blur=20).add_to(m)
+    if not all(col in all_df.columns for col in required_columns):
+        st.error(
+            "Data tidak lengkap, kolom geolocation_lat dan geolocation_lng harus ada."
+        )
+    else:
+        transaction_counts = (
+            all_df.dropna(subset=["geolocation_lat", "geolocation_lng"])
+            .groupby("geolocation_zip_code_prefix")
+            .agg(
+                total_transactions=("customer_id", "count"),
+                latitude=("geolocation_lat", "first"),
+                longitude=("geolocation_lng", "first"),
+                city=("geolocation_city", "first"),
+                state=("geolocation_state", "first"),
+            )
+            .reset_index()
+        )
 
-    top_10 = transaction_counts.nlargest(10, "total_transactions")
-    for _, row in top_10.iterrows():
-        folium.CircleMarker(
-            location=[row["latitude"], row["longitude"]],
-            radius=row["total_transactions"] / 50,
-            color="blue",
-            fill=True,
-            fill_color="blue",
-            popup=f"{row['city']} - {row['total_transactions']} transaksi",
-        ).add_to(m)
+        m = folium.Map(location=[-23.5505, -46.6333], zoom_start=4)
 
-    # Tampilkan peta
-    st_folium(m, width=1200, height=600)
+        heat_data = [
+            [row["latitude"], row["longitude"], row["total_transactions"]]
+            for _, row in transaction_counts.iterrows()
+        ]
+        HeatMap(heat_data, radius=15, blur=20).add_to(m)
+
+        top_10 = transaction_counts.nlargest(10, "total_transactions")
+        for _, row in top_10.iterrows():
+            folium.CircleMarker(
+                location=[row["latitude"], row["longitude"]],
+                radius=row["total_transactions"] / 50,
+                color="blue",
+                fill=True,
+                fill_color="blue",
+            ).add_to(m)
+
+        try:
+            folium_map_component = st_folium(
+                m,
+                width=1200,
+                height=600,
+                returned_objects=[],
+                use_container_width=True,
+            )
+        except Exception as e:
+            st.error(f"Error while rendering the map: {e}")
